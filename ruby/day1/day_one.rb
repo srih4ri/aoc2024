@@ -1,11 +1,11 @@
-lists = File.readlines('input.txt').map!(&:chomp)
+lists = File.readlines("input.txt").map!(&:chomp)
 
 list_1 = []
 list_2 = []
 
 lists.each do |list|
-  list_1 << list.split(' ')[0]
-  list_2 << list.split(' ')[1]
+  list_1 << list.split(" ")[0]
+  list_2 << list.split(" ")[1]
 end
 
 list_1.sort!

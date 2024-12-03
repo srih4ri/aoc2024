@@ -1,0 +1,13 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    rufo (0.18.0)
+
+PLATFORMS
+  arm64-darwin-23
+
+DEPENDENCIES
+  rufo (~> 0.18.0)
+
+BUNDLED WITH
+   2.4.1
