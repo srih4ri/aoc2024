@@ -1,78 +1,6 @@
-class Guard
-  attr_reader :row, :column, :direction
-
-  def initialize(row:, column:, direction:)
-    @row = row
-    @column = column
-    @direction = direction
-  end
-
-  def next
-    case direction
-    when "U" then Guard.new(row: row - 1, column: column, direction: direction)
-    when "D" then Guard.new(row: row + 1, column: column, direction: direction)
-    when "L" then Guard.new(row: row, column: column - 1, direction: direction)
-    when "R" then Guard.new(row: row, column: column + 1, direction: direction)
-    end
-  end
-
-  def turn_right
-    new_direction = case direction
-      when "U" then "R"
-      when "D" then "L"
-      when "L" then "U"
-      when "R" then "D"
-      end
-    Guard.new(row: row, column: column, direction: new_direction)
-  end
-end
-
-class World
-  attr_reader :length, :breadth, :obstacles, :guard, :obstacle_map, :patrolled_positions
-
-  def initialize(breadth:, length:, obstacles:, guard:, patrolled_positions:)
-    @breadth = breadth
-    @length = length
-    @obstacles = obstacles
-    @guard = guard
-    @patrolled_positions = patrolled_positions
-    @obstacle_map = build_obstacle_map(obstacles)
-  end
-
-  def guard_will_exit?
-    case guard.direction
-    when "U" then guard.row == 0
-    when "D" then guard.row == length
-    when "L" then guard.column == 0
-    when "R" then guard.column == breadth
-    end
-  end
-
-  def next
-    patrolled_positions << [guard.row, guard.column]
-    new_guard = guard.next
-    if guard_hits_obstacle?(new_guard)
-      new_guard = guard.turn_right
-    else
-      new_guard = guard.next
-    end
-
-    World.new(length: length, breadth: breadth, obstacles: obstacles, guard: new_guard, patrolled_positions: patrolled_positions)
-  end
-
-  private
-
-  def build_obstacle_map(obstacles)
-    obstacles.each_with_object({}) do |(row, column), map|
-      map[row] ||= {}
-      map[row][column] = true
-    end
-  end
-
-  def guard_hits_obstacle?(g)
-    obstacle_map.dig(g.row, g.column) || false
-  end
-end
+require "set"
+require_relative "guard"
+require_relative "world"
 
 class Solution
   EMPTY = "."
@@ -83,64 +11,79 @@ class Solution
     @input_file = input_file
   end
 
-  def call
-    find_mutations_with_loops()
+  def solution_1
+    c = Set.new
+    find_distinct_patrolled_positions.each { |x, y, d| c << [x, y] }
+    c.count
   end
 
-  def find_mutations_with_loops
-    obstacles, guard, length, breadth = parse_input_file
-    loops = []
-
-    (1..(length * breadth)).each do |i|      
-      
-      x = i % length
-      y = i / length
-      if obstacles.include?([x, y])
-        next
-      else
-        obstacles << [x, y]
-      end
-
-      world_steps_traversed = nil
-      world = World.new(length: length, breadth: breadth, obstacles: obstacles, guard: guard, patrolled_positions: Set.new)
-      
-      no_movement = 0
-      until world.guard_will_exit?
-        
-        world = world.next
-        
-        if no_movement > world.patrolled_positions.count
-          loops << [x, y]
-          break
-        end
-
-        if world_steps_traversed.nil?
-          world_steps_traversed = world.patrolled_positions.count
-        elsif world_steps_traversed == world.patrolled_positions.count
-          no_movement += 1
-        elsif world.patrolled_positions.count > world_steps_traversed
-          no_movement = 0
-        end
-        
-        world_steps_traversed = world.patrolled_positions.count
-      end
-      obstacles.pop
-      
-    end
-    loops.count
+  def solution_2
+    find_mutations_with_loops
   end
 
   def find_distinct_patrolled_positions
     obstacles, guard, length, breadth = parse_input_file
 
     world = World.new(length: length, breadth: breadth, obstacles: obstacles, guard: guard, patrolled_positions: Set.new)
-
+    patrolled_positions = Set.new
     until world.guard_will_exit?
       #puts "\e[H\e[2J"
-      #print_world(world)
+      # print_world(world)
+      patrolled_positions = world.patrolled_positions
       world = world.next
     end
-    world.patrolled_positions.count
+    patrolled_positions
+  end
+
+  def find_mutations_with_loops
+    obstacles, guard, length, breadth = parse_input_file
+
+    c = Set.new
+    find_distinct_patrolled_positions.each { |x, y, d| c << [x, y] }
+    puts "Evaluating #{c.count} distinct patrolled positions"
+    i = 0
+    iteration_threads = c.map do |x, y|
+      #puts "#{i}/#{c}: Checking world with obstacle at #{x}, #{y}"
+      if obstacles.include?([x, y])
+        next
+      else
+        #Thread.new do
+        puts i += 1
+        loops = []
+        obs = obstacles.dup.push([x, y])
+
+        world = World.new(length: length, breadth: breadth, obstacles: obs, guard: guard, patrolled_positions: Set.new)
+
+        iterations_without_move = 0
+        prev_positions = 0
+
+        until world.guard_will_exit?
+          if iterations_without_move > 1
+            loops << [x, y]
+            # puts "\t\tStuck in same place for more than one loops: #{iterations_without_move}"
+            break
+          end
+          world = world.next
+          # puts "\t\tWorld: #{world.patrolled_positions.count}"
+          if world.patrolled_positions.count == prev_positions
+            # puts "\t\tSame position : #{iterations_without_move}"
+            iterations_without_move += 1
+          else
+          end
+
+          prev_positions = world.patrolled_positions.count
+        end
+
+        loops.count
+        #end
+      end
+    end
+
+    iteration_threads.compact!
+    #a = iteration_threads.map(&:join).map(&:value)
+    a = iteration_threads
+    puts a.inspect
+    a.sum
   end
 
   private
@@ -171,6 +114,7 @@ class Solution
 
   def print_world(world)
     puts "\e[H\e[2J"
+    print "World\n#{world.patrolled_positions}\n"
     (0..world.length - 1).each do |row|
       (0..world.breadth - 1).each do |column|
         print "\t"
@@ -180,7 +124,7 @@ class Solution
         end
         if world.guard.row == row && world.guard.column == column
           print_guard(world.guard.direction)
-        elsif world.obstacle_map[row] && world.obstacle_map[row][column]
+        elsif world.obstacle_map.include?([row, column])
           print "#"
         else
           print "."

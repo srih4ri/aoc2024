@@ -8,11 +8,18 @@ def test_result(x, y)
   end
 end
 
-sample_result = Solution.new("input_sample.txt").find_distinct_patrolled_positions
+puts "Sample, Solution 1"
+sample_result = Solution.new("input_sample.txt").solution_1
 test_result(sample_result, 41)
 
-sample_result = Solution.new("input_sample.txt").find_mutations_with_loops
+puts "Sample, Solution 2"
+sample_result = Solution.new("input_sample.txt").solution_2
 test_result(sample_result, 6)
 
-result = Solution.new("input.txt").find_mutations_with_loops
+puts "Actual, Solution 1"
+result = Solution.new("input.txt").solution_1
+test_result(result, 5199)
+
+puts "Actual, Solution 2"
+result = Solution.new("input.txt").solution_2
 puts result
