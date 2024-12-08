@@ -9,11 +9,30 @@ class Guard
 
   def next
     case direction
-    when "U" then Guard.new(row: row - 1, column: column, direction: direction)
-    when "D" then Guard.new(row: row + 1, column: column, direction: direction)
-    when "L" then Guard.new(row: row, column: column - 1, direction: direction)
-    when "R" then Guard.new(row: row, column: column + 1, direction: direction)
+    when "U" then 
+        @row -= 1
+    when "D" then
+        @row += 1
+    when "L" then
+        @column -= 1
+    when "R" then
+        @column += 1
     end
+    self
+  end
+
+  def prev
+    case direction
+    when "U" then 
+        @row += 1
+    when "D" then
+        @row -= 1
+    when "L" then
+        @column += 1
+    when "R" then
+        @column -= 1
+    end
+    self
   end
 
   def turn_right
@@ -23,6 +42,7 @@ class Guard
       when "L" then "U"
       when "R" then "D"
       end
-    Guard.new(row: row, column: column, direction: new_direction)
+    @direction = new_direction
+    self
   end
 end

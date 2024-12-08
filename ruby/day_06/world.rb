@@ -13,10 +13,13 @@ class World
   def next
     new_guard = guard.next
     if obstacle_map.include?([new_guard.row, new_guard.column])
+        guard.prev
       new_guard = guard.turn_right
     end
     new_patrolled_positions = patrolled_positions.dup.add([new_guard.row, new_guard.column, new_guard.direction])
-    World.new(breadth: breadth, length: length, obstacles: obstacles, guard: new_guard, patrolled_positions: new_patrolled_positions)
+    @guard = new_guard
+    @patrolled_positions = new_patrolled_positions
+    self
   end
 
   def guard_will_exit?

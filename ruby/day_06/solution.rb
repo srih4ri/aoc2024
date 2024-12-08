@@ -27,8 +27,6 @@ class Solution
     world = World.new(length: length, breadth: breadth, obstacles: obstacles, guard: guard, patrolled_positions: Set.new)
     patrolled_positions = Set.new
     until world.guard_will_exit?
-      #puts "\e[H\e[2J"
-      # print_world(world)
       patrolled_positions = world.patrolled_positions
       world = world.next
     end
@@ -42,48 +40,52 @@ class Solution
     find_distinct_patrolled_positions.each { |x, y, d| c << [x, y] }
     puts "Evaluating #{c.count} distinct patrolled positions"
     i = 0
-    iteration_threads = c.map do |x, y|
-      #puts "#{i}/#{c}: Checking world with obstacle at #{x}, #{y}"
+    loops = 0
+    iteration_threads = c.each do |x, y|
+      i += 1
+      puts "Iteration #{i}"
       if obstacles.include?([x, y])
+        puts "Not placing obstacle, already present"
         next
       else
         #Thread.new do
-        puts i += 1
-        loops = []
+        puts "Placing obstacle at #{x}, #{y}"
+  
+        t = Time.now
+        
         obs = obstacles.dup.push([x, y])
 
-        world = World.new(length: length, breadth: breadth, obstacles: obs, guard: guard, patrolled_positions: Set.new)
+        world = World.new(length: length, breadth: breadth, obstacles: obs, guard: guard.dup, patrolled_positions: Set.new)
 
         iterations_without_move = 0
         prev_positions = 0
 
         until world.guard_will_exit?
+             
           if iterations_without_move > 1
-            loops << [x, y]
-            # puts "\t\tStuck in same place for more than one loops: #{iterations_without_move}"
+            
+            loops += 1
+
             break
           end
           world = world.next
-          # puts "\t\tWorld: #{world.patrolled_positions.count}"
+          
           if world.patrolled_positions.count == prev_positions
-            # puts "\t\tSame position : #{iterations_without_move}"
             iterations_without_move += 1
-          else
           end
 
           prev_positions = world.patrolled_positions.count
         end
 
-        loops.count
-        #end
+        puts "Time taken: #{Time.now - t}: patrolled_positions: #{world.patrolled_positions.count}, loops: #{loops}"
+
+        
+      #end
       end
+      puts "Iteration #{i} done; Loops: #{loops}"
     end
 
-    iteration_threads.compact!
-    #a = iteration_threads.map(&:join).map(&:value)
-    a = iteration_threads
-    puts a.inspect
-    a.sum
+    loops
   end
 
   private
