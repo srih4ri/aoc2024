@@ -23,4 +23,4 @@ test_result(sample_result, 34)
 
 puts "Actual, Solution 2"
 result = Solution.new("input.txt").solution_2
-puts result
+test_result(result, 1263)

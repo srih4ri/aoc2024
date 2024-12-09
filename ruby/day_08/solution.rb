@@ -40,6 +40,35 @@ class Solution
   end
 
   def solution_2
+    antinodes = []
+    @antenna_positions.each do |antenna, positions|
+      positions.each_with_index do |position, curr_index|
+        positions.each_with_index do |other_position, other_index|
+          next if curr_index == other_index
+          antinodes += find_repeating_antinodes(position, other_position)
+        end
+      end
+    end
+    print_world
+    antinodes.uniq.length
+  end
+
+  def find_repeating_antinodes(a,b)
+    a_ntinodes = []
+    ax, ay = a
+    bx, by = b
+    dx = bx - ax
+    dy = by - ay
+
+    cx = bx 
+    cy = by
+
+    while cx >= 0 && cx < (@length) && cy >= 0 && cy < (@breadth)
+      a_ntinodes << [cx, cy]
+      cx += dx
+      cy += dy
+    end
+    a_ntinodes
   end
 
   def find_antinode(a, b)
