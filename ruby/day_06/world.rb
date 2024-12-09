@@ -13,6 +13,7 @@ class World
   def next
     new_guard = guard.next
     if obstacle_map[new_guard.row] && obstacle_map[new_guard.row][new_guard.column]
+      guard.prev
       new_guard = guard.turn_right
     end
     new_patrolled_positions = patrolled_positions.dup.add([new_guard.row, new_guard.column, new_guard.direction])

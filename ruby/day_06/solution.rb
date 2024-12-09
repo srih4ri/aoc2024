@@ -117,6 +117,7 @@ class Solution
   def print_world(world)
     puts "\e[H\e[2J"
     print "World\n#{world.patrolled_positions}\n"
+    print "Guard: #{world.guard}\n; Obstacles: #{world.obstacles}\n"
     (0..world.length - 1).each do |row|
       (0..world.breadth - 1).each do |column|
         print "\t"
@@ -126,7 +127,7 @@ class Solution
         end
         if world.guard.row == row && world.guard.column == column
           print_guard(world.guard.direction)
-        elsif world.obstacle_map.include?([row, column])
+        elsif world.obstacles.include?([row, column])
           print "#"
         else
           print "."
