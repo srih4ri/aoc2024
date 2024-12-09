@@ -12,8 +12,7 @@ class World
 
   def next
     new_guard = guard.next
-    if obstacle_map.include?([new_guard.row, new_guard.column])
-        guard.prev
+    if obstacle_map[new_guard.row] && obstacle_map[new_guard.row][new_guard.column]
       new_guard = guard.turn_right
     end
     new_patrolled_positions = patrolled_positions.dup.add([new_guard.row, new_guard.column, new_guard.direction])
@@ -29,6 +28,11 @@ class World
   private
 
   def build_obstacle_map(obstacles)
-    obstacles.to_set
+    obstacle_map = {}
+    obstacles.each do |x, y|
+      obstacle_map[x] ||= {}
+      obstacle_map[x][y] = true
+    end
+    obstacle_map
   end
 end
