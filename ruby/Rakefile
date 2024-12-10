@@ -2,12 +2,14 @@
 
 require "fileutils"
 
+
+
 namespace :generate do
   desc "Generate new folder day_xx with necessary files"
   task :day, [:day_number] do |t, args|
     day_number = args[:day_number].to_s.rjust(2, "0")
     folder_name = "day_#{day_number}"
-    files = ["input.txt", "solution.rb", "test_solution.rb"]
+    files = ["input.txt", "input_sample.txt", "solution.rb", "test_solution.rb"]
 
     if Dir.exist?(folder_name)
       puts "Folder #{folder_name} already exists."
