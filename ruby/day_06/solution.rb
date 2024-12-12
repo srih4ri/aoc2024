@@ -50,9 +50,9 @@ class Solution
       else
         #Thread.new do
         puts "Placing obstacle at #{x}, #{y}"
-  
+
         t = Time.now
-        
+
         obs = obstacles.dup.push([x, y])
 
         world = World.new(length: length, breadth: breadth, obstacles: obs, guard: guard.dup, patrolled_positions: Set.new)
@@ -61,15 +61,13 @@ class Solution
         prev_positions = 0
 
         until world.guard_will_exit?
-             
           if iterations_without_move > 1
-            
             loops += 1
 
             break
           end
           world = world.next
-          
+
           if world.patrolled_positions.count == prev_positions
             iterations_without_move += 1
           end
@@ -79,8 +77,7 @@ class Solution
 
         puts "Time taken: #{Time.now - t}: patrolled_positions: #{world.patrolled_positions.count}, loops: #{loops}"
 
-        
-      #end
+        #end
       end
       puts "Iteration #{i} done; Loops: #{loops}"
     end

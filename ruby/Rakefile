@@ -2,8 +2,6 @@
 
 require "fileutils"
 
-
-
 namespace :generate do
   desc "Generate new folder day_xx with necessary files"
   task :day, [:day_number] do |t, args|
@@ -22,5 +20,3 @@ namespace :generate do
     end
   end
 end
-
-

@@ -21,7 +21,6 @@ puts "Sample, Solution 2"
 sample_result = Solution.new("input_sample.txt").solution_2
 test_result(sample_result, 34)
 
-
 puts "Actual, Solution 2"
 result = Solution.new("input.txt").solution_2
 puts result

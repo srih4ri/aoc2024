@@ -1,5 +1,5 @@
 # Read the file
-file_path = './input.txt'
+file_path = "./input.txt"
 lines = File.readlines(file_path).map(&:chomp)
 
 # Separate rules and lists
@@ -14,9 +14,9 @@ lines.each do |line|
   end
 
   if is_rule_section
-    rules << line.split('|').map(&:to_i)
+    rules << line.split("|").map(&:to_i)
   else
-    lists << line.split(',').map(&:to_i)
+    lists << line.split(",").map(&:to_i)
   end
 end
 
@@ -28,7 +28,7 @@ rules.each_with_index do |(first, second), index|
 end
 
 def custom_sort(list, order_hash)
-  list.sort do |a, b|    
+  list.sort do |a, b|
     if order_hash[a] && order_hash[a][b]
       -1
     elsif order_hash[b] && order_hash[b][a]
@@ -46,10 +46,9 @@ def violates_rules?(list, rules)
   end
 end
 
-wrong_lists = lists.select{ |list|
-  violates_rules?(list, rules) 
+wrong_lists = lists.select { |list|
+  violates_rules?(list, rules)
 }
-
 
 sorted_lists = wrong_lists.map { |list| custom_sort(list, order_hash) }
 

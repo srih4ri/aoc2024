@@ -42,11 +42,11 @@ class Solution
   def solution_2
   end
 
-  def find_antinode(a,b)
+  def find_antinode(a, b)
     ax, ay = a
     bx, by = b
-    cx = bx + ((bx - ax) )
-    cy = by + ((by - ay) )
+    cx = bx + ((bx - ax))
+    cy = by + ((by - ay))
     [cx, cy]
   end
 

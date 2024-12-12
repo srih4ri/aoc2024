@@ -9,28 +9,28 @@ class Guard
 
   def next
     case direction
-    when "U" then 
-        @row -= 1
-    when "D" then
-        @row += 1
-    when "L" then
-        @column -= 1
-    when "R" then
-        @column += 1
+    when "U"
+      @row -= 1
+    when "D"
+      @row += 1
+    when "L"
+      @column -= 1
+    when "R"
+      @column += 1
     end
     self
   end
 
   def prev
     case direction
-    when "U" then 
-        @row += 1
-    when "D" then
-        @row -= 1
-    when "L" then
-        @column += 1
-    when "R" then
-        @column -= 1
+    when "U"
+      @row += 1
+    when "D"
+      @row -= 1
+    when "L"
+      @column += 1
+    when "R"
+      @column -= 1
     end
     self
   end
