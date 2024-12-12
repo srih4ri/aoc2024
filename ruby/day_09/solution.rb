@@ -65,6 +65,47 @@ class DiskStructure
     sum
   end
 
+  def defragment_fast!
+    new_entries = []
+    original_index = entries.size
+    entries.reverse.each_with_index do |entry, idx|
+      original_index -= 1
+
+      entries.each_with_index do |e, i|
+        print "(" if idx == i
+        print "[" if i == original_index
+        print e
+        print ")" if idx == i
+        print "]" if i == original_index
+      end
+      puts
+
+      if entry.file?
+        puts "\tfile entry: #{entry}"
+        0.upto(original_index) do |i|
+          forward_entry = entries[i]
+          puts "\tforward_entry: #{forward_entry}: #{forward_entry.empty?} #{forward_entry.len}"
+          next if forward_entry.file?
+          if forward_entry.len == entry.len
+            entries[i] = entry
+            entries[original_index] = Entry.new(:empty, entry.len, nil, nil)
+            break
+          elsif forward_entry.len > entry.len
+            entries[original_index] = Entry.new(:empty, entry.len, nil, nil)
+            entries[i] = entry
+            puts "\t\t#{entries.map(&:to_s).join}"
+            entries.insert(i + 1, Entry.new(:empty, forward_entry.len - entry.len, nil, nil))
+            original_index += 1
+            puts "\t\t#{entries.map(&:to_s).join}"
+            puts entries.map(&:to_s).join
+          end
+        end
+      end
+    end
+
+    self
+  end
+
   def defragment!
     new_entries = []
     forward_pointer = 0
@@ -131,6 +172,27 @@ class Solution
     disk_structure.display
 
     new_disk_structure = disk_structure.defragment!
+
+    new_disk_structure.display
+
+    new_disk_structure.checksum
+  end
+
+  def solution_2
+    return 0 if diskmap.nil? || diskmap.empty?
+
+    disk_structure = DiskStructure.new
+    diskmap.chars.each_with_index do |char, index|
+      disk_structure.add_entry(
+        type: index.odd? ? :empty : :file,
+        len: char.to_i,
+        position: index.odd? ? nil : index / 2,
+      )
+    end
+
+    disk_structure.display
+
+    new_disk_structure = disk_structure.defragment_fast!
 
     new_disk_structure.display
 
