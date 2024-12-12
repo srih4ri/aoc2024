@@ -1,11 +1,21 @@
+# frozen_string_literal: true
+
 # Entry struct for individual disk positions
-Entry = Struct.new(:type, :length, :position, :original_position) do
+Entry = Struct.new(:type, :len, :position, :original_position) do
   def file?
     type == :file
   end
 
   def empty?
     type == :empty
+  end
+
+  def to_s
+    if empty?
+      "." * len
+    else
+      original_position.to_s * len
+    end
   end
 end
 
@@ -16,30 +26,28 @@ class DiskStructure
     @entries = []
   end
 
-  def add_entry(type:, length:, position:)
-    e = Entry.new(type, length, position, position)  # Store original position
-    entries << e
-    e
+  def add_entry(type:, len:, position:)
+    entries << Entry.new(type, len, position, position)
   end
 
   def empty?
     entries.empty?
   end
 
-  def display_line
+  def display_line(e = entries)
     line = ""
-    entries.each do |entry|
-      if entry.file?
-        line += entry.original_position.to_s * entry.length
-      else
-        line += "." * entry.length
-      end
+    e.each do |entry|
+      line += if entry.file?
+          entry.original_position.to_s * entry.len
+        else
+          "." * entry.len
+        end
     end
     puts line
   end
 
   def display
-    display_line  # Add single line display
+    display_line
     puts "\nTotal files: #{entries.count(&:file?)}"
     puts "Total empty spaces: #{entries.count(&:empty?)}"
     puts "Checksum: #{checksum}"
@@ -47,9 +55,9 @@ class DiskStructure
 
   def checksum
     sum = 0
-    i = 0 
-    entries.select(&:file?).each_with_index do |entry, index|
-      entry.length.times do |j|
+    i = 0
+    entries.select(&:file?).each_with_index do |entry, _index|
+      entry.len.times do |_j|
         sum += entry.original_position * i
         i += 1
       end
@@ -57,69 +65,44 @@ class DiskStructure
     sum
   end
 
-  def defragment
-    new_structure = DiskStructure.new
-    file_entries = entries.select(&:file?)
-    empty_entries = entries.select(&:empty?)
-    current_position = 0
-
-    d_entries = entries.dup
-
-    file_to_move = nil
-    # Process files sequentially
-    entries.each do |entry|
-      if entry.file?
-        entry_to_insert = entry.dup
-        new_structure.entries << entry_to_insert
-      else
-        space_left = entry.length
-        while space_left > 0
-          if file_to_move.nil?
-            until (file_to_move = entries.pop).file?
-            end
-          end
-          if space_left >= file_to_move.length
-            entry_to_insert = file_to_move.dup
-            space_left -= file_to_move.length
-          else
-            entry_to_insert = Entry.new(
-              :file,
-              space_left,
-              current_position,
-              file_to_move.original_position
-            )
-            remaining_length = file_to_move.length - space_left
-            space_left = 0
-            entries.push(
-              Entry.new(
-                :file,
-                remaining_length,
-                file_to_move.original_position,
-                file_to_move.original_position
-              )
-            )
-          end
-
-          new_structure.entries << entry_to_insert
-          file_to_move = nil
-        end
+  def defragment!
+    new_entries = []
+    forward_pointer = 0
+    backward_pointer = entries.size - 1
+    while forward_pointer <= backward_pointer
+      if forward_pointer == backward_pointer
+        new_entries << entries[forward_pointer]
+        break
       end
 
-      current_position += entry.length
-    end
+      forward_entry = entries[forward_pointer]
+      backward_entry = entries[backward_pointer]
 
-    # Add empty spaces
-    empty_entries.each do |entry|
-      new_structure.entries << Entry.new(
-        entry.type,
-        entry.length,
-        current_position,
-        entry.original_position
-      )
-      current_position += entry.length
+      if forward_entry.file?
+        new_entries << forward_entry
+        forward_pointer += 1
+      elsif backward_entry.file? && backward_entry.len.positive?
+        if forward_entry.len > backward_entry.len
+          new_entries << backward_entry
+          forward_entry.len -= backward_entry.len
+          backward_pointer -= 1
+        else
+          diff = backward_entry.len - forward_entry.len
+          new_entries << Entry.new(
+            :file,
+            forward_entry.len,
+            forward_entry.original_position,
+            backward_entry.original_position
+          )
+          backward_entry.len = diff
+          forward_pointer += 1
+        end
+      else
+        backward_pointer -= 1
+      end
     end
-
-    new_structure
+    @entries = new_entries
+    self
   end
 end
 
@@ -128,6 +111,7 @@ class Solution
 
   def initialize(file)
     raise ArgumentError, "File path cannot be nil" unless file
+
     @file = file
     load_diskmap
   end
@@ -136,19 +120,18 @@ class Solution
     return 0 if diskmap.nil? || diskmap.empty?
 
     disk_structure = DiskStructure.new
-
     diskmap.chars.each_with_index do |char, index|
-      e = disk_structure.add_entry(
+      disk_structure.add_entry(
         type: index.odd? ? :empty : :file,
-        length: char.to_i,
+        len: char.to_i,
         position: index.odd? ? nil : index / 2,
       )
     end
 
     disk_structure.display
-    puts "Checksum: #{disk_structure.checksum}"
 
-    new_disk_structure = disk_structure.defragment
+    new_disk_structure = disk_structure.defragment!
+
     new_disk_structure.display
 
     new_disk_structure.checksum

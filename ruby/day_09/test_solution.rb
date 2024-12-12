@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "solution"
 
 def test_result(x, y)
@@ -15,7 +17,7 @@ test_result(sample_result, 1928)
 
 puts "Actual, Solution 1"
 result = Solution.new("input.txt").solution_1
-test_result(result, 354)
+test_result(result, 6_288_599_492_129)
 
 puts "Sample, Solution 2"
 sample_result = Solution.new("input_sample.txt").solution_2
