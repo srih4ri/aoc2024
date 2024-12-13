@@ -35,30 +35,25 @@ class DiskStructure
   end
 
   def display_line(e = entries)
-    line = ""
-    e.each do |entry|
-      line += if entry.file?
-          entry.original_position.to_s * entry.len
-        else
-          "." * entry.len
-        end
-    end
-    puts line
+    0.upto(e.size - 1).map { |i| i.to_s }.join("\t") + "\n" +
+    e.map(&:to_s).join("\t")
   end
 
   def display
-    display_line
-    puts "\nTotal files: #{entries.count(&:file?)}"
-    puts "Total empty spaces: #{entries.count(&:empty?)}"
+    puts display_line
+    print "\nTotal files: #{entries.count(&:file?)}\t"
+    print "Total empty spaces: #{entries.count(&:empty?)}"
     puts "Checksum: #{checksum}"
   end
 
   def checksum
     sum = 0
     i = 0
-    entries.select(&:file?).each_with_index do |entry, _index|
+    entries.each_with_index do |entry, _index|
       entry.len.times do |_j|
-        sum += entry.original_position * i
+        if entry.file?
+          sum += entry.original_position * i
+        end
         i += 1
       end
     end
@@ -66,39 +61,26 @@ class DiskStructure
   end
 
   def defragment_fast!
-    new_entries = []
-    original_index = entries.size
-    entries.reverse.each_with_index do |entry, idx|
-      original_index -= 1
-
-      entries.each_with_index do |e, i|
-        print "(" if idx == i
-        print "[" if i == original_index
-        print e
-        print ")" if idx == i
-        print "]" if i == original_index
-      end
-      puts
-
-      if entry.file?
-        puts "\tfile entry: #{entry}"
-        0.upto(original_index) do |i|
-          forward_entry = entries[i]
-          puts "\tforward_entry: #{forward_entry}: #{forward_entry.empty?} #{forward_entry.len}"
-          next if forward_entry.file?
-          if forward_entry.len == entry.len
-            entries[i] = entry
-            entries[original_index] = Entry.new(:empty, entry.len, nil, nil)
-            break
-          elsif forward_entry.len > entry.len
-            entries[original_index] = Entry.new(:empty, entry.len, nil, nil)
-            entries[i] = entry
-            puts "\t\t#{entries.map(&:to_s).join}"
-            entries.insert(i + 1, Entry.new(:empty, forward_entry.len - entry.len, nil, nil))
-            original_index += 1
-            puts "\t\t#{entries.map(&:to_s).join}"
-            puts entries.map(&:to_s).join
-          end
+    files_to_move = entries.dup.reverse
+    files_to_move.each do |file|
+      next if file.empty?
+      original_index = entries.index(file)
+      (0..original_index).each do |i|
+        destination = entries[i]
+        if destination.nil?
+          exit(1)
+        end
+        next if destination.file?
+        if destination.len == file.len
+          entries[i] = file
+          entries[original_index] = Entry.new(:empty, file.len, nil, nil)
+          break
+        end
+        if destination.len > file.len
+          entries[i] = file
+          entries[original_index] = Entry.new(:empty, file.len, nil, nil)
+          entries.insert(i + 1, Entry.new(:empty, destination.len - file.len, nil, nil))
+          break
         end
       end
     end
@@ -169,12 +151,7 @@ class Solution
       )
     end
 
-    disk_structure.display
-
     new_disk_structure = disk_structure.defragment!
-
-    new_disk_structure.display
-
     new_disk_structure.checksum
   end
 
@@ -190,12 +167,7 @@ class Solution
       )
     end
 
-    disk_structure.display
-
     new_disk_structure = disk_structure.defragment_fast!
-
-    new_disk_structure.display
-
     new_disk_structure.checksum
   end
 
